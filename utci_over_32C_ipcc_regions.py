@@ -110,21 +110,7 @@ def make_plot(axi,v,vmin,vmax,cbstr,titlestr,cmap,fontsize):
     gl.xformatter = LONGITUDE_FORMATTER; gl.yformatter = LATITUDE_FORMATTER
 
     return g
-    
-#----------------------------------------------------------------------------
-# COLORMAP: UTCI hex colors and breakpoints - Chloe Brimicombe (with thanks)
-#----------------------------------------------------------------------------
-
-#cmap = ['#2f2f2f','#a1dcfc','#fdee03','#75b82b','#a84190','#0169b3'] # Shikari!                               
-#cmap_chloe = ['#081D58', '#084081', '#0868AC', '#2B8CBE', '#4EB3D3', '#7BCCC4', '#A8DDB5', '#CCEBC5', '#E0F3DB', '#F7FCF0', '#FFFFCC', '#FFEDA0', '#FED976', '#FEB24C', 
-#'#FD8D3C', '#FC4E2A', '#E31A1C', '#BD0026', '#800026' , '#662506'] # Chloe Brimicombe
-#breakpoints = [-50,0,9,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,53] # (but cold stress isn't really accounted)
-#cmap_idx = np.linspace(0,len(cmap)-1, len(cmap), dtype=int)
-#colors = [cmap[i] for i in cmap_idx]
-#values = np.array(np.arange(len(colors)+1))
-#values = breakpoints
-#colorscale, tickvals, ticktext = discrete_colorscale(values, colors)    
-    
+        
 #------------------------------------------------------------------------------
 # SET: paths
 #------------------------------------------------------------------------------
