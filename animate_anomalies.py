@@ -1,10 +1,10 @@
 #! /usr/bin python
 
 #------------------------------------------------------------------------------
-# PROGRAM: utci_exceedence_anomaly.py
+# PROGRAM: animate_anomalies.py
 #------------------------------------------------------------------------------
 # Version 0.1
-# 6 June, 2021
+# 4 June, 2021
 # Michael Taylor
 # https://patternizer.github.io
 # michael DOT a DOT taylor AT uea DOT ac DOT uk 
@@ -14,9 +14,14 @@
 # IMPORT PYTHON LIBRARIES
 #------------------------------------------------------------------------------
 
+from itertools import chain
+from glob import glob
 import numpy as np
 import xarray as xr
 import os, sys
+from pathlib import Path
+import imageio
+
 
 # Plotting libraries:
 import matplotlib
@@ -30,6 +35,8 @@ from pandas.plotting import register_matplotlib_converters
 register_matplotlib_converters()
 import matplotlib.ticker as mticker
 
+import cmocean
+
 # Mapping libraries:
 import cartopy
 import cartopy.crs as ccrs
@@ -38,8 +45,6 @@ import cartopy.feature as cf
 from cartopy.util import add_cyclic_point
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
-
-import cmocean
 
 # Silence library version notifications
 import warnings
@@ -53,16 +58,12 @@ print("xarray   : ", xr.__version__) # xarray   :  0.17.0
 print("matplotlib   : ", matplotlib.__version__) # matplotlib   :  3.3.4
 print("cartopy   : ", cartopy.__version__) # cartopy   :  0.18.0
 
-# %matplotlib inline # for Jupyter Notebooks
-
-#----------------------------------------------------------------------------
-# SETTINGS
-#----------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# SETTINGS:
+#------------------------------------------------------------------------------
 
 fontsize = 16
 cbstr = r'UTCI [$^{\circ}$C] anomaly (from 1985-2015)'
-model = 'hadgem3' # hadgem3, bcc or cmcc
-scenario = 'ssp585' # ssp126, ssp245 or ssp585
 threshold = 32
 flag_land = False # False --> land+sea
 flag_threshold = False # False --> full range of UTCI
@@ -78,7 +79,6 @@ if projection == 'northpolarstereo': p = ccrs.NorthPolarStereo()
 if projection == 'southpolarstereo': p = ccrs.SouthPolarStereo()
 if projection == 'lambertconformal': p = ccrs.LambertConformal(central_longitude=0)
 
-modelstr = dict({'hadgem3':'HadGEM3-GC31-LL','bcc':'BCC-CSM2-MR','cmcc':'CMCC-ESM2'})
 scenariostr = dict({'ssp126':'SSP1 2.6','ssp245':'SSP2 4.5','ssp585':'SSP5 8.5'})
 
 # COLORMAP:
@@ -97,6 +97,7 @@ cmap = cmocean.cm.balance
 #cmap = cmocean.cm.topo
 #cmap = cmocean.cm.delta
 
+flag_animate = True
 
 #------------------------------------------------------------------------------
 # METHODS
@@ -120,27 +121,11 @@ def make_plot(axi,v,vmin,vmax,cbstr,titlestr,cmap,fontsize):
 
     return g
 
-def plot_anomaly(model, scenario, threshold, variable):
-
-    # SET: filename and title
-    
-    if flag_land == False:
-        landstr = 'landsea'
-    else:        
-        landstr = 'land'
-    if flag_threshold == False:
-        thresholdstr = 'full'
-        utcistr = 'UTCI'
-    else:
-        thresholdstr = 'utci_over' + '_' + str(threshold)
-        utcistr = 'UTCI>' + str(threshold) + r'$^{\circ}$C'
-
-    plotfile = model + '_' + scenario + '_' + thresholdstr + '_' + 'anomaly' + '_'+ landstr + '_' + projection + '.png'
-    titlestr = modelstr[model] + ': ' + scenariostr[scenario] + ' (2015-2100)' + ' ' + utcistr + ' ' + 'anomaly'
+def plot_anomaly(model, scenario, threshold, variable, plotfile, titlestr):
   
     fig, axs = plt.subplots(1,1, figsize=(15,10), subplot_kw=dict(projection=p))
     #vmin = np.nanmin(ssp126_land_anomaly_mean); vmax = np.nanmax(ssp126_land_anomaly_mean)
-    vmin=0; vmax=6
+    vmin=-4; vmax=12
     g = make_plot(axs, variable, vmin, vmax, cbstr, titlestr, cmap, fontsize)
     axs.add_feature(cartopy.feature.OCEAN, zorder=100, alpha=0.2, edgecolor='k')
     cb = fig.colorbar(g, ax=axs, shrink=0.6, extend='both')
@@ -155,87 +140,94 @@ def plot_anomaly(model, scenario, threshold, variable):
 
 #project_directory = '/gws/pw/j05/cop26_hackathons/bristol/project10/'
 project_directory = os.curdir + '/' + 'DATA' + '/'
+png_directory = os.curdir + '/' + 'PNG' + '/'
 
 #data_directory = project_directory + 'utci_projections_1deg/BCC-CSM2-MR/historical/r1i1p1f1/'
 data_directory = project_directory + 'utci_projections_1deg_monthly/'
+utci_path = Path(data_directory)
 
 #------------------------------------------------------------------------------
-# LOAD: landseamask & latitudinal weights
+# LOAD: UTCI baseline + projections into a dataframe
 #------------------------------------------------------------------------------
 
-landseamask = xr.load_dataset(project_directory + 'landseamask.nc')
-weights = np.cos(np.deg2rad(landseamask.lat))
+# Populate the lists from the directory structure (many thanks to Charles Simpson for this segment)
 
+model_list = []
+scenario_list = []
+
+for model_path in utci_path.glob("*"):
+    model = str(model_path).split("/")[-1]
+    model_list.append(model)
+    for scenario_path in model_path.glob("*"):
+        scenario = str(scenario_path).split("/")[-1]
+        scenario_list.append(scenario)
+        print(model, scenario)
+                     
 #------------------------------------------------------------------------------
-# LOAD: baseline and projection
-#------------------------------------------------------------------------------
-
-if model == 'hadgem3': 
-    runcode = 'r1i1p1f3'
-else: 
-    runcode = 'r1i1p1f1'    
-baseline = xr.open_dataset(data_directory + '/' + modelstr[model] + '/' + 'historical' + '/' + runcode + '/' + 'monthly_avg.nc')
-ssp = xr.open_dataset(data_directory + '/' + modelstr[model] + '/' + scenario + '/' + runcode + '/' + 'monthly_avg.nc')
-
-#------------------------------------------------------------------------------
-# CALCULATIONS
-#------------------------------------------------------------------------------
-
-# Convert UTCI to degrees Centigrade (set the 32 degree threshold and/or apply land mask) and average over time dimension
-
-if flag_land == False:
-    baseline_landsea = baseline.utci-273.15
-    ssp_landsea = ssp.utci-273.15    
-    if flag_threshold == False:           
-        baseline_landsea_normals = baseline_landsea.sel(time=slice("1986", "2016")).groupby('time.month').mean(['time'])
-        ssp_landsea_anomaly = ssp_landsea.groupby('time.month') - baseline_landsea_normals
-        variable = ssp_landsea_anomaly.mean('time')
-    else:      
-        baseline_landsea_over_threshold = xr.where(baseline_landsea>threshold, baseline_landsea, np.nan)
-        baseline_landsea_over_threshold_normals = baseline_landsea_over_threshold.sel(time=slice("1986", "2016")).groupby('time.month').mean(['time'])                                          
-        ssp_landsea_over_threshold = xr.where(ssp_landsea>threshold, ssp_landsea, np.nan)
-        ssp_landsea_over_threshold_anomaly = ssp_landsea_over_threshold.groupby('time.month') - baseline_landsea_over_threshold_normals
-        variable = ssp_landsea_over_threshold_anomaly.mean('time')
-else:
-    baseline_land = baseline.utci.where(landseamask.LSMASK)-273.15
-    ssp_land = ssp.utci.where(landseamask.LSMASK)-273.15    
-    if flag_threshold == False:                
-        baseline_land_normals = baseline_land.sel(time=slice("1986", "2016")).groupby('time.month').mean(['time'])
-        ssp_land_anomaly = ssp_land.groupby('time.month') - baseline_land_normals
-        variable = ssp_land_anomaly.mean('time')
-    else:
-        baseline_land_over_threshold = xr.where(baseline_land>threshold, baseline_land, np.nan)
-        baseline_land_over_threshold_normals = baseline_land_over_threshold.sel(time=slice("1986", "2016")).groupby('time.month').mean(['time'])                                          
-        ssp_land_over_threshold = xr.where(ssp_land>threshold, ssp_land, np.nan)
-        ssp_land_over_threshold_anomaly = ssp_land_over_threshold.groupby('time.month') - baseline_land_over_threshold_normals
-        variable = ssp_land_over_threshold_anomaly.mean('time')
-
-#------------------------------------------------------------------------------
-# PLOTS
+# SAVE: UTCI anomaly 1x1 mean
 #------------------------------------------------------------------------------
 
-plot_anomaly(model, scenario, threshold, variable)
+# model_list:    ['CMCC-ESM2','BCC-CSM2-MR','HadGEM3-GC31-LL']
+# scenarios: ['ssp126','ssp245','ssp585']    
+# runid_list:    ['r1i1p1f1','r1i1p1f1','r1i1p1f3']
 
-#------------------------------------------------------------------------------
-# WORK IN PROGRESS
-#------------------------------------------------------------------------------
+scenarios = np.sort(scenario_list[0:3])
 
-# Extract fraction of time UTCI is above threshold, weight and slice by latitude
+for i in range(len(model_list)):
 
-#ssp126_utci_over_threshold_frac = (np.isfinite(ssp126_utci_over_threshold_mean)/len(ssp126_utci.time))*100.
-#utci_over_threshold_frac_mean = utci_over_threshold_frac.mean('time') # time-averaged map
-#utci_over_threshold_frac_weighted = utci_over_threshold_frac.weighted(weights)
-#utci_over_threshold_frac_weighted_lat = utci_over_threshold_frac_weighted.mean('lon')
-#utci_over_threshold_frac_weighted_lat_mean = utci_over_threshold_frac_weighted.mean('lon').mean('time')
-#utci_over_threshold_frac_weighted_mean = utci_over_threshold_frac_weighted.mean(("lon", "lat"))
+    for j in range(len(scenarios)):        
+                 
+        # LOAD: UTCI timeseries netCDF
 
-# SAVE: extracts to netCDF
+        if flag_land == True:
+            filename_timeseries = 'utci_anomaly_land_timeseries' + '_' + model_list[i] + '_' + scenarios[j] + '.nc'
+        else:    
+            filename_timeseries = 'utci_anomaly_timeseries' + '_' + model_list[i] + '_' + scenarios[j] + '.nc'
+        utci_anomaly_land_timeseries = xr.open_dataset(filename_timeseries)
 
-#utci_over_threshold_mean.to_netcdf('global_over_32_mean.nc')
-#utci_over_threshold_frac.to_netcdf('global_over_32_frac.nc')
-#utci_over_threshold_frac_mean.to_netcdf('global_over_32_frac.nc')
-#utci_over_threshold_frac_weighted_lat.to_netcdf('global_over_32_frac.nc')
-#utci_over_threshold_frac_weighted_mean.to_netcdf('global_over_32_frac.nc')
+        if flag_animate == True:
+
+            years = [ utci_anomaly_land_timeseries.time.dt.year[k].values for k in range(len(utci_anomaly_land_timeseries.time)) ]
+            yearlist = np.unique(years)
+            year_pointer = yearlist[0]
+            for k in range(len(utci_anomaly_land_timeseries.time)):
+
+                year = str(utci_anomaly_land_timeseries.time.dt.year[k].values)                
+                if year == str(year_pointer):
+                
+                
+                    year_pointer += 1
+                    variable = utci_anomaly_land_timeseries.utci[k,:,:]
+                    plotfile = png_directory + year + '_' + model_list[i] + '_' + scenarios[j] + '_' + 'UTCI' + '_' + 'anomaly' + '_'+ 'land' + '_' + projection + '.png'
+                    titlestr = model_list[i] + ':' + ' ' + scenariostr[scenarios[j]] + ' ' + 'UTCI anomaly:' + ' ' + year
+                    plot_anomaly(model, scenario, threshold, variable, plotfile, titlestr)
+            
+            #------------------------------------------------------------------------------
+            # GENERATE: Animated GIF of UTCI anomaly per model per scenario
+            #------------------------------------------------------------------------------
+            
+            #use_reverse_order = False
+            #png_list = png_directory + '*.png'
+            #gif_str = 'model_scenario_utci_timeseries.gif'
+            #if use_reverse_order == True:
+            #    a = glob.glob(png_list)
+            #    images = sorted(a, reverse=True)
+            #else:
+            #    images = sorted(glob.glob(png_list))
+            #var = [imageio.imread(file) for file in images]
+            #imageio.mimsave(gif_str, var, fps = 2)
+            
+            #----------------------------------------------------------------------------
+            # CLI --> MAKE GIF & MP4
+            #----------------------------------------------------------------------------
+            
+            # PNG --> GIF:
+            # convert -delay 10 -loop 0 png_dir gif_str
+            # GIF --> MP4
+            # ffmpeg -i gif_str -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" mp4_str
+            
+        else:
+            continue
 
 #-----------------------------------------------------------------------------
 print('*** END')
