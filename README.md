@@ -6,7 +6,12 @@ CMIP6 Hackathon UTCI codebase developing with colleagues from the Project 10 tea
 
 ## Contents
 
-* `utci_over_32C_ipcc_regions.py` - python script to read in SSP projections plot the mean UTCI>32C masked by IPCC AR5 (or AR6) regions
+* `utci_model_projection_quickplot.py` - single (model)(projection) run version with flags for land masking and thresholding
+* `utci_over_32C_ipcc_regions.py` - python script to read in SSP projections plot the mean UTCI>32C masked by IPCC AR5 (or AR6) regions. Illustrative example with the Amazon Basin masked.
+* `utci_over_32C.py` - python script to read in SSP projections and extract the UTCI>32C exceedences. Calculates the latitudinally weighted zonally-averaged mean UTCI>32C edge for the NH and SH. Calculates the mean weighted zonally-average. Calculates the global area-averaged weighted mean timeseires.
+* `utci_over_32C_time_fraction.py` - python script to read in SSP projections and create a boolean array of UTCI>32C exceedences for calculation of time fraction statistics. Calculates the latitudinally weighted zonally-averaged mean UTCI>32C edge for the NH and SH. Calculates the mean weighted zonally-average. Calculates the global area-averaged weighted mean timeseires.
+* `load_baselines_and_projections.py` - python script to lazy load all model baselines and projections into a dataframe and write out netcdfs containing the (model)(projection) area-averaged mean and gridded timeseries with the option of land masking as input to `animate_anomalies.py`.
+* `animate_anomalies.py` - python script to load the (model)(projection) netCDF area-averaged means and monthly gridded timeseries data and plot monthly gridded anomalies for production of  animated GIFs.
 
 ## Instructions for use
 
@@ -21,7 +26,12 @@ Then create a DATA/ directory and copy to it the required datasets listed in the
 
 The code is designed to run in an environment using Miniconda3-latest-Linux-x86_64 (see requirements.txt)
 
+    $ python utci_model_projection_quickplot.py
     $ python utci_over_32C_ipcc_regions.py
+    $ python utci_over_32C.py
+    $ python utci_over_32C_time_fraction.py
+    $ python load_baselines_and_projections.py (prerequisite for `animate_anomalies.py`
+    $ python animate_anomalies.py
     
 ## License
 
