@@ -260,7 +260,7 @@ plt.savefig(plotfile, dpi=300)
 plt.close('all')
 
 #-----------------------------------------------------------------------------
-# PLOT: UTCI (global)
+# PLOT: UTCI (global): HadGEM3 projection illustration
 #-----------------------------------------------------------------------------
 
 if scenario == 126:
@@ -284,7 +284,7 @@ plt.savefig(plotfile, dpi=300)
 plt.close('all')
 
 #-----------------------------------------------------------------------------
-# PLOT: UTCI (masked region = Amazon Basin)
+# PLOT: UTCI HadGEM3 projection illustration (masked region = Amazon Basin)
 #-----------------------------------------------------------------------------
 
 utci_region = utci_over_threshold_mean.where(r)
