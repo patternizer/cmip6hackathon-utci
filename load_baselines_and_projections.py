@@ -53,6 +53,9 @@ scenario_list = []
 runid_list = []
 
 for model_path in utci_path.glob("*"):
+ 
+    print('populating (model)(scenario) lists ...')
+
     model = str(model_path).split("/")[-1]
     model_list.append(model)
     file_nested_list.append([])
@@ -69,30 +72,31 @@ for model_path in utci_path.glob("*"):
 ds_scenario_results = []
 for model in model_list:
 
-    print(model)
+    print('MODEL:', model)
+    
     # Get the historical baseline
     scenario = "historical"
     monthly_path = list((utci_path / model / "historical").glob("*/monthly_avg.nc"))[0]
     runid = str(monthly_path).split("/")[-2]
     ds_monthly = xr.open_dataset(monthly_path)
-
     ds_baseline = (
         ds_monthly
         .sel(time=slice("1986", "2016"))
+#        .sel(time=slice("1985", "2015"))
         .mean(["time"])
     )
-    print(ds_baseline)
+    print('BASELINE (min,max): ', ds_baseline.utci.min(), ds_baseline.utci.max())
+    print('------------------')
     
     # Get the land fraction
 #    ds_sftof = xr.open_dataset(project_directory+'sftof.nc')
 #    ds_sftof = ds_sftof.interp(lat=ds_baseline.lat, lon=ds_baseline.lon)
-
-    ds_scenario_results.append([])
-    
+        
     # Get the scenario results
+    ds_scenario_results.append([])
     for scenario in np.unique(scenario_list):
     
-        print(scenario)
+        print('SCENARIO: ', scenario)
         if scenario == "historical":
             continue
         monthly_path = list((utci_path / model / scenario).glob("*/monthly_avg.nc"))[0]
@@ -103,6 +107,10 @@ for model in model_list:
 #            .where(ds_sftof.sftof==0)
             .assign_coords(scenario=[scenario], model=[model])
         )
+
+        print('UTCI (min,max): ', utci.min(), utci.max())
+        print('------------------')
+
         ds_scenario_results[-1].append(utci)
     ds_scenario_results[-1] = xr.combine_by_coords(ds_scenario_results[-1])
           
@@ -117,15 +125,14 @@ for model in model_list:
 scenarios = np.sort(scenario_list[0:3])
 
 for i in range(len(model_list)):
-
     for j in range(len(scenarios)):        
         
         # APPLY: land mask, extract timeseries and timeseries mean averaged over time dimension
  
-        utci_anomaly = ds_scenario_results[i].utci[j,:,:,:]
-        utci_anomaly_mean = utci_anomaly.mean('time')
-        utci_anomaly_land_timeseries = utci_anomaly.where(landseamask.LSMASK)
-        utci_anomaly_land_mean = utci_anomaly.mean('time').where(landseamask.LSMASK)
+        utci_anomaly_timeseries = ds_scenario_results[i].utci[j,:,:,:]
+        utci_anomaly_mean = utci_anomaly_timeseries.mean('time')
+        utci_anomaly_land_timeseries = utci_anomaly_timeseries.where( landseamask.LSMASK==1 ) 
+        utci_anomaly_land_mean = utci_anomaly_timeseries.mean('time').where( landseamask.LSMASK==1 ) 
         
         filename_timeseries = 'utci_anomaly_timeseries' + '_' + model_list[i] + '_' + scenarios[j] + '.nc'
         filename_mean = 'utci_anomaly_mean' + '_' + model_list[i] + '_' + scenarios[j] + '.nc'
@@ -133,7 +140,7 @@ for i in range(len(model_list)):
         filename_land_mean = 'utci_anomaly_land_mean' + '_' + model_list[i] + '_' + scenarios[j] + '.nc'
 
         # SAVE: UTCI mean and timeseries to netCDF
-        utci_anomaly.to_netcdf(filename_timeseries)
+        utci_anomaly_timeseries.to_netcdf(filename_timeseries)
         utci_anomaly_mean.to_netcdf(filename_mean)
         utci_anomaly_land_timeseries.to_netcdf(filename_land_timeseries)
         utci_anomaly_land_mean.to_netcdf(filename_land_mean)

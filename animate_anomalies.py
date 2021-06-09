@@ -65,7 +65,7 @@ print("cartopy   : ", cartopy.__version__) # cartopy   :  0.18.0
 fontsize = 16
 cbstr = r'UTCI [$^{\circ}$C] anomaly (from 1985-2015)'
 threshold = 32
-flag_land = False # False --> land+sea
+flag_land = True # False --> land+sea
 flag_threshold = False # False --> full range of UTCI
 projection = 'equalearth'
 if projection == 'platecarree': p = ccrs.PlateCarree(central_longitude=0)
@@ -85,10 +85,10 @@ scenariostr = dict({'ssp126':'SSP1 2.6','ssp245':'SSP2 4.5','ssp585':'SSP5 8.5'}
 
 #'Accent', 'Accent_r', 'Blues', 'Blues_r', 'BrBG', 'BrBG_r', 'BuGn', 'BuGn_r', 'BuPu', 'BuPu_r', 'CMRmap', 'CMRmap_r', 'Dark2', 'Dark2_r', 'GnBu', 'GnBu_r', 'Greens', 'Greens_r', 'Greys', 'Greys_r', 'OrRd', 'OrRd_r', 'Oranges', 'Oranges_r', 'PRGn', 'PRGn_r', 'Paired', 'Paired_r', 'Pastel1', 'Pastel1_r', 'Pastel2', 'Pastel2_r', 'PiYG', 'PiYG_r', 'PuBu', 'PuBuGn', 'PuBuGn_r', 'PuBu_r', 'PuOr', 'PuOr_r', 'PuRd', 'PuRd_r', 'Purples', 'Purples_r', 'RdBu', 'RdBu_r', 'RdGy', 'RdGy_r', 'RdPu', 'RdPu_r', 'RdYlBu', 'RdYlBu_r', 'RdYlGn', 'RdYlGn_r', 'Reds', 'Reds_r', 'Set1', 'Set1_r', 'Set2', 'Set2_r', 'Set3', 'Set3_r', 'Spectral', 'Spectral_r', 'Wistia', 'Wistia_r', 'YlGn', 'YlGnBu', 'YlGnBu_r', 'YlGn_r', 'YlOrBr', 'YlOrBr_r', 'YlOrRd', 'YlOrRd_r', 'afmhot', 'afmhot_r', 'autumn', 'autumn_r', 'binary', 'binary_r', 'bone', 'bone_r', 'brg', 'brg_r', 'bwr', 'bwr_r', 'cividis', 'cividis_r', 'cmo.algae', 'cmo.algae_r', 'cmo.amp', 'cmo.amp_r', 'cmo.balance', 'cmo.balance_r', 'cmo.curl', 'cmo.curl_r', 'cmo.deep', 'cmo.deep_r', 'cmo.delta', 'cmo.delta_r', 'cmo.dense', 'cmo.dense_r', 'cmo.diff', 'cmo.diff_r', 'cmo.gray', 'cmo.gray_r', 'cmo.haline', 'cmo.haline_r', 'cmo.ice', 'cmo.ice_r', 'cmo.matter', 'cmo.matter_r', 'cmo.oxy', 'cmo.oxy_r', 'cmo.phase', 'cmo.phase_r', 'cmo.rain', 'cmo.rain_r', 'cmo.solar', 'cmo.solar_r', 'cmo.speed', 'cmo.speed_r', 'cmo.tarn', 'cmo.tarn_r', 'cmo.tempo', 'cmo.tempo_r', 'cmo.thermal', 'cmo.thermal_r', 'cmo.topo', 'cmo.topo_r', 'cmo.turbid', 'cmo.turbid_r', 'cool', 'cool_r', 'coolwarm', 'coolwarm_r', 'copper', 'copper_r', 'cubehelix', 'cubehelix_r', 'flag', 'flag_r', 'gist_earth', 'gist_earth_r', 'gist_gray', 'gist_gray_r', 'gist_heat', 'gist_heat_r', 'gist_ncar', 'gist_ncar_r', 'gist_rainbow', 'gist_rainbow_r', 'gist_stern', 'gist_stern_r', 'gist_yarg', 'gist_yarg_r', 'gnuplot', 'gnuplot2', 'gnuplot2_r', 'gnuplot_r', 'gray', 'gray_r', 'hot', 'hot_r', 'hsv', 'hsv_r', 'inferno', 'inferno_r', 'jet', 'jet_r', 'magma', 'magma_r', 'nipy_spectral', 'nipy_spectral_r', 'ocean', 'ocean_r', 'pink', 'pink_r', 'plasma', 'plasma_r', 'prism', 'prism_r', 'rainbow', 'rainbow_r', 'seismic', 'seismic_r', 'spring', 'spring_r', 'summer', 'summer_r', 'tab10', 'tab10_r', 'tab20', 'tab20_r', 'tab20b', 'tab20b_r', 'tab20c', 'tab20c_r', 'terrain', 'terrain_r', 'turbo', 'turbo_r', 'twilight', 'twilight_r', 'twilight_shifted', 'twilight_shifted_r', 'viridis', 'viridis_r', 'winter', 'winter_r'
 
-cmap = cmocean.cm.balance
+#cmap = cmocean.cm.balance
 #cmap = 'twilight_shifted'
 #cmap = 'afmhot'
-#cmap = cmocean.cm.oxy
+cmap = cmocean.cm.oxy
 #cmap = 'gist_heat'
 
 # for other geo apps:
@@ -124,8 +124,9 @@ def make_plot(axi,v,vmin,vmax,cbstr,titlestr,cmap,fontsize):
 def plot_anomaly(model, scenario, threshold, variable, plotfile, titlestr):
   
     fig, axs = plt.subplots(1,1, figsize=(15,10), subplot_kw=dict(projection=p))
-    #vmin = np.nanmin(ssp126_land_anomaly_mean); vmax = np.nanmax(ssp126_land_anomaly_mean)
-    vmin=-4; vmax=12
+#    vmin = np.nanmin(variable); vmax = np.nanmax(variable)
+#    vmin=-4; vmax=12
+    vmin=0; vmax=6
     g = make_plot(axs, variable, vmin, vmax, cbstr, titlestr, cmap, fontsize)
     axs.add_feature(cartopy.feature.OCEAN, zorder=100, alpha=0.2, edgecolor='k')
     cb = fig.colorbar(g, ax=axs, shrink=0.6, extend='both')
