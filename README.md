@@ -1,6 +1,8 @@
 ![image](https://github.com/patternizer/cmip6hackathon-utci/blob/master/hadgem3_ssp585_utci_over_32.png)
+![image](https://github.com/patternizer/cmip6hackathon-utci/blob/master/hadgem3_ssp585_utci_over_32_area_weighted_lat.png)
 
-# cmpi6hackathon-utci
+
+# cmip6hackathon-utci
 
 CMIP6 Hackathon UTCI codebase developing with colleagues from the Project 10 team 
 
@@ -15,10 +17,10 @@ CMIP6 Hackathon UTCI codebase developing with colleagues from the Project 10 tea
 
 ## Instructions for use
 
-The first step is to clone the latest cmpi6hackathon-utci code and step into the installed Github directory: 
+The first step is to clone the latest cmip6hackathon-utci code and step into the installed Github directory: 
 
-    $ git clone https://github.com/patternizer/cmpi6hackathon-utci.git
-    $ cd cmpi6hackathon-utci
+    $ git clone https://github.com/patternizer/cmip6hackathon-utci.git
+    $ cd cmip6hackathon-utci
 
 Then create a DATA/ directory and copy to it the required datasets listed in the code.
 
@@ -35,7 +37,7 @@ The code is designed to run in an environment using Miniconda3-latest-Linux-x86_
     
 ## License
 
-To be confirmed but for now [Open Government License](http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/).
+To be confirmed (probably CC-BY 4.0) but for now [Open Government License](http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/).
 
 ## Contact information
 
