@@ -1,7 +1,7 @@
 #! /usr/bin python
 
 #------------------------------------------------------------------------------
-# PROGRAM: utci_exceedence_anomaly.py
+# PROGRAM: utci_model_projection_quickplot.py
 #------------------------------------------------------------------------------
 # Version 0.1
 # 6 June, 2021
@@ -181,7 +181,7 @@ ssp = xr.open_dataset(data_directory + '/' + modelstr[model] + '/' + scenario + 
 # CALCULATIONS
 #------------------------------------------------------------------------------
 
-# Convert UTCI to degrees Centigrade (set the 32 degree threshold and/or apply land mask) and average over time dimension
+# Convert UTCI to degrees Centigrade (set the 32 degree threshold and apply land mask if selected) and average over time dimension for a quick inspection map
 
 if flag_land == False:
     baseline_landsea = baseline.utci-273.15
@@ -211,31 +211,10 @@ else:
         variable = ssp_land_over_threshold_anomaly.mean('time')
 
 #------------------------------------------------------------------------------
-# PLOTS
+# PLOT: case
 #------------------------------------------------------------------------------
 
 plot_anomaly(model, scenario, threshold, variable)
-
-#------------------------------------------------------------------------------
-# WORK IN PROGRESS
-#------------------------------------------------------------------------------
-
-# Extract fraction of time UTCI is above threshold, weight and slice by latitude
-
-#ssp126_utci_over_threshold_frac = (np.isfinite(ssp126_utci_over_threshold_mean)/len(ssp126_utci.time))*100.
-#utci_over_threshold_frac_mean = utci_over_threshold_frac.mean('time') # time-averaged map
-#utci_over_threshold_frac_weighted = utci_over_threshold_frac.weighted(weights)
-#utci_over_threshold_frac_weighted_lat = utci_over_threshold_frac_weighted.mean('lon')
-#utci_over_threshold_frac_weighted_lat_mean = utci_over_threshold_frac_weighted.mean('lon').mean('time')
-#utci_over_threshold_frac_weighted_mean = utci_over_threshold_frac_weighted.mean(("lon", "lat"))
-
-# SAVE: extracts to netCDF
-
-#utci_over_threshold_mean.to_netcdf('global_over_32_mean.nc')
-#utci_over_threshold_frac.to_netcdf('global_over_32_frac.nc')
-#utci_over_threshold_frac_mean.to_netcdf('global_over_32_frac.nc')
-#utci_over_threshold_frac_weighted_lat.to_netcdf('global_over_32_frac.nc')
-#utci_over_threshold_frac_weighted_mean.to_netcdf('global_over_32_frac.nc')
 
 #-----------------------------------------------------------------------------
 print('*** END')
